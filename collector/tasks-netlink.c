@@ -362,13 +362,12 @@ netlink_recvfrom (NetLinkPidScanner *nls, char *buffer)
 	socklen_t from_nla_len;
 	struct sockaddr_nl from_nla;
 
-	ZERO_ARRAY (buffer);
-
 	ZERO (from_nla);
         from_nla.nl_family = AF_NETLINK;
         from_nla.nl_groups = CN_IDX_PROC;
         from_nla.nl_pid = 1;
 
+	from_nla_len = sizeof(from_nla);
 	return recvfrom (nls->socket, buffer, BUFF_SIZE, 0,
 			 (struct sockaddr*)&from_nla, &from_nla_len);
 }
@@ -387,6 +386,7 @@ netlink_listen_thread (void *user_data)
                 struct nlmsghdr *nlh = (struct nlmsghdr*)buff;
 
 		/* block here mostly waiting for news ... */
+		ZERO_ARRAY (buff);
                 recv_len = netlink_recvfrom (nls, buff);
                 if (recv_len < 1)
 			continue;
@@ -444,7 +444,8 @@ pid_scanner_new_netlink (PidScanEventFn event_fn, void *user_data)
          */
         nls->socket = socket (PF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR);
         if (nls->socket == -1) {
-		log ("netlink socket error\n");
+                log ("netlink socket error\n");
+                free (nls);
                 return NULL;
         }
         my_nla.nl_family = AF_NETLINK;
@@ -485,6 +486,7 @@ pid_scanner_new_netlink (PidScanEventFn event_fn, void *user_data)
 			goto close_and_exit;
 		}
 
+		ZERO_ARRAY (buff);
                 recv_len = netlink_recvfrom (nls, buff);
 		if (recv_len < 1 || !NLMSG_OK (nlh, recv_len) ||
 		    nlh->nlmsg_type != NLMSG_DONE) {
