@@ -178,6 +178,7 @@ class ProcessTree:
                     prune = True
                 elif p.duration <= 2 * self.sample_period:
                     # short-lived process
+                    self.writer.status("pruning short lived process ? %s" % p.cmd)
                     prune = True
 
                 if prune:

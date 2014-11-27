@@ -63,7 +63,9 @@ AXIS_FONT_SIZE = 11
 LEGEND_FONT_SIZE = 12
 
 # CPU load chart color.
-CPU_COLOR = (0.40, 0.55, 0.70, 1.0)
+# original: CPU_COLOR = (0.40, 0.55, 0.70, 1.0)
+CPU_COLOR  = (0, 0, 0, 1.0)
+CPU2_COLOR = (1.0, 0, 0, 0.1)   # show extra background
 # IO wait chart color.
 IO_COLOR = (0.76, 0.48, 0.48, 0.5)
 # Disk throughput color.
@@ -82,19 +84,19 @@ MEM_SWAP_COLOR = DISK_TPUT_COLOR
 # Process border color.
 PROC_BORDER_COLOR = (0.71, 0.71, 0.71, 1.0)
 # Waiting process color.
-PROC_COLOR_D = (0.76, 0.48, 0.48, 0.5)
+PROC_COLOR_D = (0.76, 0.48, 0.48, 1.0)
 # Running process color.
 PROC_COLOR_R = CPU_COLOR
 # Sleeping process color.
-PROC_COLOR_S = (0.94, 0.94, 0.94, 1.0)
+PROC_COLOR_S = (1.0, 1.0, 1.0, 1.0)
 # Stopped process color.
 PROC_COLOR_T = (0.94, 0.50, 0.50, 1.0)
 # Zombie process color.
 PROC_COLOR_Z = (0.71, 0.71, 0.71, 1.0)
 # Dead process color.
-PROC_COLOR_X = (0.71, 0.71, 0.71, 0.125)
+PROC_COLOR_X = (0.71, 0.71, 0.71, 0.25)
 # Paging process color.
-PROC_COLOR_W = (0.71, 0.71, 0.71, 0.125)
+PROC_COLOR_W = (0.71, 0.71, 0.71, 0.5)
 
 # Process label color.
 PROC_TEXT_COLOR = (0.19, 0.19, 0.19, 1.0)
@@ -391,6 +393,8 @@ def render(ctx, options, xscale, trace):
 	# x, y, w, h
 	clip = ctx.clip_extents()
 
+	print("render")
+
 	sec_w = int (xscale * sec_w_base)
 	ctx.set_line_width(1.0)
 	ctx.select_font_face(FONT_NAME)
@@ -408,6 +412,7 @@ def render(ctx, options, xscale, trace):
 		curr_y = off_y;
 
 	if options.charts:
+		print("render_charts")
 		curr_y = render_charts (ctx, options, clip, trace, curr_y, w, h, sec_w)
 
 	# draw process boxes
@@ -415,6 +420,7 @@ def render(ctx, options, xscale, trace):
 	if proc_tree.taskstats and options.cumulative:
 		proc_height -= CUML_HEIGHT
 
+	print("draw_process_bar_chart")
 	draw_process_bar_chart(ctx, clip, options, proc_tree, trace.times,
 			       curr_y, w, proc_height, sec_w)
 
@@ -422,16 +428,23 @@ def render(ctx, options, xscale, trace):
 	ctx.set_font_size(SIG_FONT_SIZE)
 	draw_text(ctx, SIGNATURE, SIG_COLOR, off_x + 5, proc_height - 8)
 
+	if options.cumulative:
+		print("cumulative enabled")
+
 	# draw a cumulative CPU-time-per-process graph
 	if proc_tree.taskstats and options.cumulative:
+		print("draw_cuml_graph?")
 		cuml_rect = (off_x, curr_y + off_y, w, CUML_HEIGHT/2 - off_y * 2)
 		if clip_visible (clip, cuml_rect):
+			print("draw_cuml_graph!")
 			draw_cuml_graph(ctx, proc_tree, cuml_rect, duration, sec_w, STAT_TYPE_CPU)
 
 	# draw a cumulative I/O-time-per-process graph
 	if proc_tree.taskstats and options.cumulative:
+		print("draw_cuml_graph?")
 		cuml_rect = (off_x, curr_y + off_y * 100, w, CUML_HEIGHT/2 - off_y * 2)
 		if clip_visible (clip, cuml_rect):
+			print("draw_cuml_graph!")
 			draw_cuml_graph(ctx, proc_tree, cuml_rect, duration, sec_w, STAT_TYPE_IO)
 
 def draw_process_bar_chart(ctx, clip, options, proc_tree, times, curr_y, w, h, sec_w):
@@ -529,9 +542,12 @@ def draw_processes_recursively(ctx, proc, proc_tree, y, proc_h, rect, clip) :
 	return x, y
 
 
+# draw the activity blocks for a single process 
+# this will only draw the bars for the activity, idle time is not printed ?
 def draw_process_activity_colors(ctx, proc, proc_tree, x, y, w, proc_h, rect, clip):
 
 	if y > clip[1] + clip[3] or y + proc_h + 2 < clip[1]:
+		print("draw_process_activity_colors clipping ?") 
 		return
 
 	draw_fill_rect(ctx, PROC_COLOR_S, (x, y, w, proc_h))
@@ -556,14 +572,23 @@ def draw_process_activity_colors(ctx, proc, proc_tree, x, y, w, proc_h, rect, cl
 		state = get_proc_state( sample.state )
 
 		color = STATE_COLORS[state]
+		height = proc_h
+
 		if state == STATE_RUNNING:
 			alpha = min (sample.cpu_sample.user + sample.cpu_sample.sys, 1.0)
-			color = tuple(list(PROC_COLOR_R[0:3]) + [alpha])
-#			print "render time %d [ tx %d tw %d ], sample state %s color %s alpha %g" % (sample.time, tx, tw, state, color, alpha)
+			# color = tuple(list(PROC_COLOR_R[0:3]) + [alpha])
+			height = height *alpha
 		elif state == STATE_SLEEPING:
 			continue
 
-		draw_fill_rect(ctx, color, (tx, y, tw, proc_h))
+		# print "[%s] render time %d [ tx %d tw %d ], sample state %s color %s" % (proc.exe, sample.time, tx, tw, state, color)
+		
+
+		# draw_fill_rect(ctx, color, (tx, y, tw, height))
+		if state == STATE_RUNNING:
+			draw_fill_rect(ctx, CPU2_COLOR, (tx, y, tw, proc_h))
+
+		draw_fill_rect(ctx, color, (tx, y+proc_h, tw, -height))
 
 def draw_process_connecting_lines(ctx, px, py, x, y, proc_h):
 	ctx.set_source_rgba(*DEP_COLOR)
@@ -650,7 +675,7 @@ def draw_cuml_graph(ctx, proc_tree, chart_bounds, duration, sec_w, stat_type):
 		return
 
 	pix_per_ns = chart_bounds[3] / total_time
-#	print "total time: %g pix-per-ns %g" % (total_time, pix_per_ns)
+	print "total time: %g pix-per-ns %g" % (total_time, pix_per_ns)
 
 	# FIXME: we have duplicates in the process list too [!] - why !?
 
@@ -734,7 +759,7 @@ def draw_cuml_graph(ctx, proc_tree, chart_bounds, duration, sec_w, stat_type):
 			extnts = ctx.text_extents(label)
 			label_w = extnts[2]
 			label_h = extnts[3]
-#			print "Text extents %g by %g" % (label_w, label_h)
+			# print "Text extents %g by %g" % (label_w, label_h)
 			labels.append((label,
 				       chart_bounds[0] + chart_bounds[2] - label_w - off_x * 2,
 				       y + (cuml + label_h) / 2))

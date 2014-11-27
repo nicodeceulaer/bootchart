@@ -17,6 +17,7 @@
 
 
 import sys
+sys.path.append('./pybootchartgui')
 from pybootchartgui.main import main
 
 if __name__ == '__main__':
