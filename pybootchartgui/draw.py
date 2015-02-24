@@ -542,12 +542,12 @@ def draw_processes_recursively(ctx, proc, proc_tree, y, proc_h, rect, clip) :
 	return x, y
 
 
-# draw the activity blocks for a single process 
+# draw the activity blocks for a single process
 # this will only draw the bars for the activity, idle time is not printed ?
 def draw_process_activity_colors(ctx, proc, proc_tree, x, y, w, proc_h, rect, clip):
 
 	if y > clip[1] + clip[3] or y + proc_h + 2 < clip[1]:
-		print("draw_process_activity_colors clipping ?") 
+		print("draw_process_activity_colors clipping ?")
 		return
 
 	draw_fill_rect(ctx, PROC_COLOR_S, (x, y, w, proc_h))
@@ -574,7 +574,7 @@ def draw_process_activity_colors(ctx, proc, proc_tree, x, y, w, proc_h, rect, cl
 		color = STATE_COLORS[state]
 		height = proc_h
 
-		if state == STATE_RUNNING:
+		if True: # state == STATE_RUNNING:
 			alpha = min (sample.cpu_sample.user + sample.cpu_sample.sys, 1.0)
 			# color = tuple(list(PROC_COLOR_R[0:3]) + [alpha])
 			height = height *alpha
@@ -582,10 +582,10 @@ def draw_process_activity_colors(ctx, proc, proc_tree, x, y, w, proc_h, rect, cl
 			continue
 
 		# print "[%s] render time %d [ tx %d tw %d ], sample state %s color %s" % (proc.exe, sample.time, tx, tw, state, color)
-		
+
 
 		# draw_fill_rect(ctx, color, (tx, y, tw, height))
-		if state == STATE_RUNNING:
+		if True: #state == STATE_RUNNING:
 			draw_fill_rect(ctx, CPU2_COLOR, (tx, y, tw, proc_h))
 
 		draw_fill_rect(ctx, color, (tx, y+proc_h, tw, -height))

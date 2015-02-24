@@ -294,6 +294,7 @@ def _parse_proc_ps_log(writer, file):
     ltime = 0
     timed_blocks_count = 0
     for time, lines in itertools.chain((first_timed_block,), timed_blocks):
+        # ndc # print "looking at time: " + str(time)
         timed_blocks_count += 1
         for line in lines:
             if not line: continue
@@ -301,6 +302,7 @@ def _parse_proc_ps_log(writer, file):
             if len(tokens) < 21:
                 continue
 
+            # ndc # print " looking at line: " + line
             offset = [index for index, token in enumerate(tokens[1:]) if token[-1] == ')'][0]
             pid, cmd, state, ppid = int(tokens[0]), ' '.join(tokens[1:2+offset]), tokens[2+offset], int(tokens[3+offset])
             userCpu, sysCpu, stime = int(tokens[13+offset]), int(tokens[14+offset]), int(tokens[21+offset])
