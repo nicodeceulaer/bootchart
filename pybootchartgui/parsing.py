@@ -103,12 +103,12 @@ class Trace:
                 # that we have no samples, or process info for them
                 # so climb the parent hierarcy to find one
                 if int (ppid * 1000) not in self.ps_stats.process_map:
-#                    print "Pid '%d' short lived with no process" % ppid
+                    print "Pid '%d' short lived with no process" % ppid
                     ppid = find_parent_id_for (ppid)
 #                else:
 #                    print "Pid '%d' has an entry" % ppid
             else:
-#                print "Pid '%d' missing from pid map" % pid
+                print "Pid '%d' missing from pid map" % pid
                 return 0
             return ppid
 
@@ -120,8 +120,8 @@ class Trace:
                     cmd = self.cmdline[rpid]
                     proc.exe = cmd['exe']
                     proc.args = cmd['args']
-#                else:
-#                    print "proc %d '%s' not in cmdline" % (rpid, proc.exe)
+                else:
+                    print "proc %d '%s' not in cmdline" % (rpid, proc.exe)
 
         # re-parent any stray orphans if we can
         if self.parent_map is not None:
@@ -170,7 +170,6 @@ class Trace:
                 break
         if proc is None:
             writer.warn("no selected crop proc '%s' in list" % crop_after)
-
 
         cpu_util = [(sample.time, sample.user + sample.sys + sample.io) for sample in self.cpu_stats]
         disk_util = [(sample.time, sample.util) for sample in self.disk_stats]
@@ -306,6 +305,7 @@ def _parse_proc_ps_log(writer, file):
             offset = [index for index, token in enumerate(tokens[1:]) if token[-1] == ')'][0]
             pid, cmd, state, ppid = int(tokens[0]), ' '.join(tokens[1:2+offset]), tokens[2+offset], int(tokens[3+offset])
             userCpu, sysCpu, stime = int(tokens[13+offset]), int(tokens[14+offset]), int(tokens[21+offset])
+
 
             # magic fixed point-ness ...
             pid *= 1000

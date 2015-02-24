@@ -25,7 +25,7 @@ class RenderOptions:
 
 	def __init__(self, app_options):
 		# should we render a cumulative CPU time chart
-		self.cumulative = True
+		self.cumulative = False # True
 		self.charts = True
 		self.kernel_only = False
 		self.app_options = app_options
@@ -43,9 +43,9 @@ WHITE = (1.0, 1.0, 1.0, 1.0)
 # Process tree border color.
 BORDER_COLOR = (0.63, 0.63, 0.63, 1.0)
 # Second tick line color.
-TICK_COLOR = (0.92, 0.92, 0.92, 1.0)
+TICK_COLOR = (0.2, 0.2, 0.2, 1.0)
 # 5-second tick line color.
-TICK_COLOR_BOLD = (0.86, 0.86, 0.86, 1.0)
+TICK_COLOR_BOLD = (0.8, 0.2, 0.2, 1.0)
 # Annotation colour
 ANNOTATION_COLOR = (0.63, 0.0, 0.0, 0.5)
 # Text color.
@@ -56,21 +56,24 @@ FONT_NAME = "Bitstream Vera Sans"
 # Title text font.
 TITLE_FONT_SIZE = 18
 # Default text font.
-TEXT_FONT_SIZE = 12
+TEXT_FONT_SIZE = 10
 # Axis label font.
-AXIS_FONT_SIZE = 11
+AXIS_FONT_SIZE = 8
 # Legend font.
-LEGEND_FONT_SIZE = 12
+LEGEND_FONT_SIZE = 10
 
 # CPU load chart color.
 # original: CPU_COLOR = (0.40, 0.55, 0.70, 1.0)
-CPU_COLOR  = (0, 0, 0, 1.0)
-CPU2_COLOR = (1.0, 0, 0, 0.1)   # show extra background
+CPU_COLOR  = (1.0,   0,   0, 1.0)
+CPU2_COLOR = (0.2,   0,   0, 1.0)   # show extra background
+
 # IO wait chart color.
-IO_COLOR = (0.76, 0.48, 0.48, 0.5)
+IO_COLOR = (0, 0.8, 0, 0.5)
+
 # Disk throughput color.
-DISK_TPUT_COLOR = (0.20, 0.71, 0.20, 1.0)
+DISK_TPUT_COLOR = (1, 0.2, 0.2, 1.0)
 # CPU load chart color.
+
 FILE_OPEN_COLOR = (0.20, 0.71, 0.71, 1.0)
 # Mem cached color
 MEM_CACHED_COLOR = CPU_COLOR
@@ -83,28 +86,22 @@ MEM_SWAP_COLOR = DISK_TPUT_COLOR
 
 # Process border color.
 PROC_BORDER_COLOR = (0.71, 0.71, 0.71, 1.0)
-# Waiting process color.
-PROC_COLOR_D = (0.76, 0.48, 0.48, 1.0)
-# Running process color.
-PROC_COLOR_R = CPU_COLOR
-# Sleeping process color.
-PROC_COLOR_S = (1.0, 1.0, 1.0, 1.0)
-# Stopped process color.
-PROC_COLOR_T = (0.94, 0.50, 0.50, 1.0)
-# Zombie process color.
-PROC_COLOR_Z = (0.71, 0.71, 0.71, 1.0)
-# Dead process color.
-PROC_COLOR_X = (0.71, 0.71, 0.71, 0.25)
-# Paging process color.
-PROC_COLOR_W = (0.71, 0.71, 0.71, 0.5)
+
+PROC_COLOR_R = ( 1.0,    0,     0, 1.0)   # Running
+PROC_COLOR_D = (   0,  1.0,     0, 1.0)   # Waiting (disk i/o)
+PROC_COLOR_S = ( 0.8,  0.8,   1.0, 1.0)   # Sleeping
+PROC_COLOR_T = ( 0.7, 0.20,  0.70, 1.0)   # Stopped
+PROC_COLOR_Z = ( 0.4,  0.4,   0.8, 1.0)   # Zombie
+PROC_COLOR_X = ( 1.0,  1.0,     0, 1.0)   # Dead
+PROC_COLOR_W = (   0, 0.71,  0.71, 1.0)   # Paging
 
 # Process label color.
-PROC_TEXT_COLOR = (0.19, 0.19, 0.19, 1.0)
+PROC_TEXT_COLOR = (0.2, 0.2, 1.0, 1.0)
 # Process label font.
 PROC_TEXT_FONT_SIZE = 12
 
 # Signature color.
-SIG_COLOR = (0.0, 0.0, 0.0, 0.3125)
+SIG_COLOR = (0.3, 0.3, 0.3, 0.6)
 # Signature font.
 SIG_FONT_SIZE = 14
 # Signature text.
@@ -303,7 +300,7 @@ def render_charts(ctx, options, clip, trace, curr_y, w, h, sec_w):
 	ctx.set_font_size(LEGEND_FONT_SIZE)
 
 	draw_legend_box(ctx, "CPU (user+sys)", CPU_COLOR, off_x, curr_y+20, leg_s)
-	draw_legend_box(ctx, "I/O (wait)", IO_COLOR, off_x + 120, curr_y+20, leg_s)
+	draw_legend_box(ctx, "I/O (wait)",     IO_COLOR, off_x + 120, curr_y+20, leg_s)
 
 	# render I/O wait
 	chart_rect = (off_x, curr_y+30, w, bar_h)
@@ -317,12 +314,13 @@ def render_charts(ctx, options, clip, trace, curr_y, w, h, sec_w):
 		draw_chart (ctx, CPU_COLOR, True, chart_rect, \
 			    [(sample.time, sample.user + sample.sys) for sample in trace.cpu_stats], \
 			    proc_tree, None)
+		draw_box_ticks (ctx, chart_rect, sec_w)
 
 	curr_y = curr_y + 30 + bar_h
 
 	# render second chart
 	draw_legend_line(ctx, "Disk throughput", DISK_TPUT_COLOR, off_x, curr_y+20, leg_s)
-	draw_legend_box(ctx, "Disk utilization", IO_COLOR, off_x + 120, curr_y+20, leg_s)
+	draw_legend_box(ctx,  "Disk utilization", IO_COLOR, off_x + 120, curr_y+20, leg_s)
 
         # render I/O utilization
 	chart_rect = (off_x, curr_y+30, w, bar_h)
@@ -433,31 +431,48 @@ def render(ctx, options, xscale, trace):
 
 	# draw a cumulative CPU-time-per-process graph
 	if proc_tree.taskstats and options.cumulative:
-		print("draw_cuml_graph?")
+		print("draw_cuml_graph - cpu time")
 		cuml_rect = (off_x, curr_y + off_y, w, CUML_HEIGHT/2 - off_y * 2)
 		if clip_visible (clip, cuml_rect):
-			print("draw_cuml_graph!")
+			print("draw_cuml_graph - cpu")
 			draw_cuml_graph(ctx, proc_tree, cuml_rect, duration, sec_w, STAT_TYPE_CPU)
 
 	# draw a cumulative I/O-time-per-process graph
 	if proc_tree.taskstats and options.cumulative:
-		print("draw_cuml_graph?")
+		print("draw_cuml_graph i/o time")
 		cuml_rect = (off_x, curr_y + off_y * 100, w, CUML_HEIGHT/2 - off_y * 2)
 		if clip_visible (clip, cuml_rect):
-			print("draw_cuml_graph!")
+			print("draw_cuml_graph - i/o")
 			draw_cuml_graph(ctx, proc_tree, cuml_rect, duration, sec_w, STAT_TYPE_IO)
 
 def draw_process_bar_chart(ctx, clip, options, proc_tree, times, curr_y, w, h, sec_w):
 	header_size = 0
 	if not options.kernel_only:
+		my_offset = off_x
 		draw_legend_box (ctx, "Running (%cpu)",
-				 PROC_COLOR_R, off_x    , curr_y + 45, leg_s)
+				 PROC_COLOR_R, my_offset    , curr_y + 45, leg_s)
+		my_offset += 120
 		draw_legend_box (ctx, "Unint.sleep (I/O)",
-				 PROC_COLOR_D, off_x+120, curr_y + 45, leg_s)
+				 PROC_COLOR_D, my_offset, curr_y + 45, leg_s)
+		my_offset += 120
 		draw_legend_box (ctx, "Sleeping",
-				 PROC_COLOR_S, off_x+240, curr_y + 45, leg_s)
+				 PROC_COLOR_S, my_offset, curr_y + 45, leg_s)
+		my_offset += 120
+		draw_legend_box (ctx, "Dead",
+				 PROC_COLOR_X, my_offset, curr_y + 45, leg_s)
+		my_offset += 120
+		draw_legend_box (ctx, "Paging",
+				 PROC_COLOR_W, my_offset, curr_y + 45, leg_s)
+		my_offset += 120
 		draw_legend_box (ctx, "Zombie",
-				 PROC_COLOR_Z, off_x+360, curr_y + 45, leg_s)
+				 PROC_COLOR_Z, my_offset, curr_y + 45, leg_s)
+		my_offset += 120
+		draw_legend_box (ctx, "Stopped",
+				 PROC_COLOR_T, my_offset, curr_y + 45, leg_s)
+		my_offset += 120
+		draw_legend_box (ctx, "Cpu load",
+				 CPU2_COLOR, my_offset, curr_y + 45, leg_s)
+		my_offset += 120
 		header_size = 45
 
 	chart_rect = [off_x, curr_y + header_size + 15,
@@ -558,37 +573,32 @@ def draw_process_activity_colors(ctx, proc, proc_tree, x, y, w, proc_h, rect, cl
 
 		# samples are sorted chronologically
 		if tx < clip[0]:
+			print "bad sorting 1"
 			continue
 		if tx > clip[0] + clip[2]:
+			print "bad sorting 2"
 			break
 
 		tw = round(proc_tree.sample_period * rect[2] / float(proc_tree.duration))
-		if last_tx != -1 and abs(last_tx - tx) <= tw:
+		if last_tx != -1: #and abs(last_tx - tx) <= tw:
 			tw -= last_tx - tx
 			tx = last_tx
 		tw = max (tw, 1) # nice to see at least something
 
 		last_tx = tx + tw
 		state = get_proc_state( sample.state )
+		adjusted_state = state
+		# adjust the state based on cpu stats
+		if sample.cpu_sample.user + sample.cpu_sample.sys > 0:
+			adjusted_state = STATE_RUNNING
 
-		color = STATE_COLORS[state]
-		height = proc_h
+		color  = STATE_COLORS[state]
+		draw_fill_rect(ctx, color, (tx, y, tw,  proc_h))   # full bar for state
 
-		if True: # state == STATE_RUNNING:
+   		# cpuload as extra
+   		if adjusted_state == STATE_RUNNING:
 			alpha = min (sample.cpu_sample.user + sample.cpu_sample.sys, 1.0)
-			# color = tuple(list(PROC_COLOR_R[0:3]) + [alpha])
-			height = height *alpha
-		elif state == STATE_SLEEPING:
-			continue
-
-		# print "[%s] render time %d [ tx %d tw %d ], sample state %s color %s" % (proc.exe, sample.time, tx, tw, state, color)
-
-
-		# draw_fill_rect(ctx, color, (tx, y, tw, height))
-		if True: #state == STATE_RUNNING:
-			draw_fill_rect(ctx, CPU2_COLOR, (tx, y, tw, proc_h))
-
-		draw_fill_rect(ctx, color, (tx, y+proc_h, tw, -height))
+			draw_fill_rect(ctx, CPU2_COLOR, (tx, y+proc_h, tw, -proc_h*alpha) )
 
 def draw_process_connecting_lines(ctx, px, py, x, y, proc_h):
 	ctx.set_source_rgba(*DEP_COLOR)
@@ -609,7 +619,8 @@ def draw_process_connecting_lines(ctx, px, py, x, y, proc_h):
 
 # elide the bootchart collector - it is quite distorting
 def elide_bootchart(proc):
-	return proc.cmd == 'bootchartd' or proc.cmd == 'bootchart-colle'
+    return false
+	# return proc.cmd == 'bootchartd' or proc.cmd == 'bootchart-colle'
 
 class CumlSample:
 	def __init__(self, proc):
@@ -706,6 +717,7 @@ def draw_cuml_graph(ctx, proc_tree, chart_bounds, duration, sec_w, stat_type):
 
 		# hide really tiny processes
 		if cuml * pix_per_ns <= 2:
+			print "hiding"
 			continue
 
 		last_time = times[0]
