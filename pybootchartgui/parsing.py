@@ -297,11 +297,15 @@ def _parse_proc_ps_log(writer, file):
         timed_blocks_count += 1
         for line in lines:
             if not line: continue
+
+            # NDC - we seem to like to put spaces in our process names, which will break below split on space !
+            # NDC - fix by replacing the spaces to a single underscore
+            line = re.sub(r'\((.*?) +(.*)\)', r'(\1_\2)', line)
             tokens = line.split(' ')
             if len(tokens) < 21:
                 continue
 
-            # ndc # print " looking at line: " + line
+            # NDC - print " looking at line: " + line
             offset = [index for index, token in enumerate(tokens[1:]) if token[-1] == ')'][0]
             pid, cmd, state, ppid = int(tokens[0]), ' '.join(tokens[1:2+offset]), tokens[2+offset], int(tokens[3+offset])
             userCpu, sysCpu, stime = int(tokens[13+offset]), int(tokens[14+offset]), int(tokens[21+offset])
